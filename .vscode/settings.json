@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/Users/williamma/Documents/appdev/bagel/venv/bin/python3.7",
+    "python.formatting.provider": "black"
+}
