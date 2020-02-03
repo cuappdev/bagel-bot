@@ -5,6 +5,7 @@ import random
 import sys
 
 bearer_token = 'Bearer ' + os.getenv('API_KEY')
+GROUP_SIZE = 4
 SLACK_API = 'https://slack.com/api/'
 
 def slack_pr(endpoint, data):
@@ -52,20 +53,20 @@ def slack_create_group(users):
     })
     print(res)
     res = slack_pr(SLACK_API + 'chat.postMessage', {
-        'text': 'Well anyways, enjoy your first four person coffee chat!',
+        'text': 'Well anyways, enjoy your group coffee chat!',
         'channel': channel_id
     })
     print(res)
 
 def form_groups(members, num_groups, group_size):
-    return [members.pop() for i in range(group_size)] for j in range(num_groups)]
+    return [[members.pop() for i in range(group_size)] for j in range(num_groups)]
 
 def divvy_up(members, group_size):
     mbrs = members.copy()
 
     small_groups = group_size - (len(members) % group_size)
     large_groups = (len(members) - (group_size - 1) * small_groups) // group_size
-    
+
     groups = [
         *form_groups(mbrs, small_groups, group_size - 1),
         *form_groups(mbrs, large_groups, group_size)
@@ -77,7 +78,7 @@ def divvy_up(members, group_size):
 if __name__ == '__main__':
     bagelers = slack_get_bagelers()
     random.shuffle(bagelers)
-    groups = divvy_up(bagelers, 4)
+    groups = divvy_up(bagelers, GROUP_SIZE)
 
     for arg in sys.argv[1:]:
         if arg == 'print':
