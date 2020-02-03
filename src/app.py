@@ -1,7 +1,7 @@
 import json
-import requests
 import os
 import random
+import requests
 import sys
 
 bearer_token = 'Bearer ' + os.getenv('API_KEY')
