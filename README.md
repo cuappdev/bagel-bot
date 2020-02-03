@@ -11,7 +11,7 @@
    - d) add the bot to the channels you want to divvy up
 3. run the app
    - a) install requirements
-   - b) `python3 src/app.py <actions>` where <actions> is one of "print" or "make"
+   - b) `python3 src/app.py <actions>` where `<actions>` is one of "print" or "make"
 
 ### divvy algorithm:
 let `n` be the number of people and `k` be the target group size. 
