@@ -17,7 +17,7 @@ def slack_pr(endpoint, data):
         }
     ).json()
 
-def slack_gr(endpoint, params):
+def slack_gr(endpoint, params=None):
     return requests.get(
         endpoint,
         params = params,
@@ -28,7 +28,7 @@ def slack_gr(endpoint, params):
     ).json()
 
 def slack_get_bagelers():
-    res = slack_gr(SLACK_API + 'users.conversations', None)
+    res = slack_gr(SLACK_API + 'users.conversations')
     bagelers = set()
     for channel in res['channels']:
         channel_id = channel['id']
@@ -57,26 +57,19 @@ def slack_create_group(users):
     })
     print(res)
 
+def form_groups(members, num_groups, group_size):
+    return [members.pop() for i in range(group_size)] for j in range(num_groups)]
+
 def divvy_up(members, group_size):
     mbrs = members.copy()
 
     small_groups = group_size - (len(members) % group_size)
     large_groups = (len(members) - (group_size - 1) * small_groups) // group_size
-    groups = []
-
-    for i in range(0, small_groups):
-        group = []
-        for j in range(0, group_size - 1):
-            group.append(mbrs.pop())
-
-        groups.append(group)
-
-    for i in range(0, large_groups):
-        group = []
-        for j in range(0, group_size):
-            group.append(mbrs.pop())
-
-        groups.append(group)
+    
+    groups = [
+        *form_groups(mbrs, small_groups, group_size - 1),
+        *form_groups(mbrs, large_groups, group_size)
+    ]
 
     return groups
 
