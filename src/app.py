@@ -126,8 +126,10 @@ if __name__ == '__main__':
 
         elif sys.argv[1] == 'make':
             print('Making slack groups for real')
+            slack_message('--- 🥯🥯🥯 start bagels 🥯🥯🥯 ---')
             for group in groups:
                 time.sleep(5)
                 print([slack_get_name(member) for member in group])
                 slack_create_group(group)
+            slack_message('--- 🥯🥯🥯 stop bagels 🥯🥯🥯 ---')
 
