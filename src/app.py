@@ -5,6 +5,7 @@ import requests
 import sys
 import time
 
+
 bearer_token = 'Bearer ' + os.getenv('API_KEY')
 GROUP_SIZE = 4
 SLACK_API = 'https://slack.com/api/'
@@ -65,18 +66,31 @@ def slack_get_bagelers():
     return list(bagelers)
 
 
+def slack_message_channel(message, channel_id):
+    return slack_pr('chat.postMessage', {
+        'text': message,
+        'channel': channel_id
+    })
+
+
 def slack_create_group(users):
     res = slack_pr('conversations.open', { 'users': users })
     channel_id = res['channel']['id']
 
-    res = slack_pr('chat.postMessage', {
-        'text': 'Hello, is this thing on?',
-        'channel': channel_id
-    })
-    res = slack_pr('chat.postMessage', {
-        'text': 'Well anyways, enjoy your group coffee chat!',
-        'channel': channel_id
-    })
+    res = slack_message_channel('Welcome to bagel chats, round two!', channel_id)
+    print(res)
+
+
+def slack_message(message):
+    res = slack_gr('users.conversations')
+    for channel in res['channels']:
+        time.sleep(5)
+        slack_message_channel(message, channel['id'])
+
+
+def slack_get_mpim():
+    res = slack_gr('users.conversations', { 'types': 'mpim' })
+    print(res)
 
 
 def form_groups(members, num_groups, group_size):
@@ -97,21 +111,14 @@ def divvy_up(members, group_size):
     return groups
 
 
-def slack_message(message):
-    res = slack_gr('users.conversations')
-    for channel in res['channels']:
-        channel_id = channel['id']
-        res = slack_pr('chat.postMessage', {
-            'text': message,
-            'channel': channel_id
-        })
-
-
 if __name__ == '__main__':
     if sys.argv[1] == 'printm':
         print('Printing a message')
         print(sys.argv[2])
         slack_message(sys.argv[2])
+    
+    elif sys.argv[1] == 'getmpim':
+        slack_get_mpim()
 
     else:
         bagelers = slack_get_bagelers()
@@ -126,10 +133,7 @@ if __name__ == '__main__':
 
         elif sys.argv[1] == 'make':
             print('Making slack groups for real')
-            slack_message('--- 🥯🥯🥯 start bagels 🥯🥯🥯 ---')
             for group in groups:
-                time.sleep(5)
                 print([slack_get_name(member) for member in group])
                 slack_create_group(group)
-            slack_message('--- 🥯🥯🥯 stop bagels 🥯🥯🥯 ---')
 
