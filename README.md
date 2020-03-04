@@ -1,4 +1,4 @@
-![](bagel.png)
+![](bagel-logo.png | width=200)
 
 # bagel-bot
 
