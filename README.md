@@ -1,3 +1,5 @@
+![](bagel.png)
+
 # bagel-bot
 
 *to help slack members group up and get food*
