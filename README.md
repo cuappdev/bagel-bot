@@ -1,4 +1,4 @@
-![](bagel-logo.png =200x200)
+![](./bagel-logo.png)
 
 # bagel-bot
 
