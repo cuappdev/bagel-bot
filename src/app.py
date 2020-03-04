@@ -8,7 +8,9 @@ import time
 
 bearer_token = 'Bearer ' + os.getenv('API_KEY')
 GROUP_SIZE = 4
+IMAGE_URL = 'https://raw.githubusercontent.com/cuappdev/bagel-bot/master/bagel-logo.png'
 SLACK_API = 'https://slack.com/api/'
+TESTING_CHANNEL_ID = 'CTF81MFH6'
 
 
 def slack_pr(endpoint, data):
@@ -48,7 +50,7 @@ def slack_get_profile(user):
 def slack_get_name(user):
     return slack_get_profile(user)['real_name']
 
-    
+
 def slack_get_bagelers():
     res = slack_gr('users.conversations')
     bagelers = set()
@@ -68,8 +70,10 @@ def slack_get_bagelers():
 
 def slack_message_channel(message, channel_id):
     return slack_pr('chat.postMessage', {
+        'channel': channel_id,
+        'icon_url': IMAGE_URL,
         'text': message,
-        'channel': channel_id
+        'username': 'bagel',
     })
 
 
@@ -116,9 +120,13 @@ if __name__ == '__main__':
         print('Printing a message')
         print(sys.argv[2])
         slack_message(sys.argv[2])
-    
+
     elif sys.argv[1] == 'getmpim':
         slack_get_mpim()
+
+    elif sys.argv[1] == 'testm':
+        print('Sending a message to #bagel-testing')
+        slack_message_channel("BET BET BET", TESTING_CHANNEL_ID)
 
     else:
         bagelers = slack_get_bagelers()
@@ -136,4 +144,3 @@ if __name__ == '__main__':
             for group in groups:
                 print([slack_get_name(member) for member in group])
                 slack_create_group(group)
-
