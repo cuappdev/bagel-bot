@@ -1,4 +1,5 @@
 keys.env
+*.sqlite
 
 .vscode/*
 !.vscode/settings.json
