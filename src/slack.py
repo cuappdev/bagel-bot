@@ -53,7 +53,6 @@ def profile_get(slack_id):
         return profile_cache[slack_id]
         
     res = gr('users.profile.get', { 'user': slack_id })
-    print(res)
     profile_cache[slack_id] = res['profile']
     return res['profile']
 
