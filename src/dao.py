@@ -51,7 +51,7 @@ def bagel_instance_print_all():
 
     bagel_instances = BagelInstance.query().all()
     for instance in bagel_instances: 
-        print(f'{str(instance.id)} {str(instance.bagel_date)}}'
+        print(str(instance.id) + ' ' +  str(instance.bagel_date))
         print('' + str(instance.id) + ' ' + str(instance.bagel_date))
 
     print_thin_spacer()

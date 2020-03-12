@@ -17,8 +17,8 @@ Base = declarative_base()
 user_chat_association_table = db.Table(
     'user_chat_association_table',
     Base.metadata,
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('chat_id', db.Integer, db.ForeignKey('chats.id'))
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('chat_id', db.Integer, db.ForeignKey('chat.id'))
 )
 
 

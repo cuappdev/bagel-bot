@@ -20,7 +20,6 @@ TESTING_CHANNEL_ID = 'CTF81MFH6'
 
 
 def pr(endpoint, data):
-    try: requests.
     return requests.post(
         SLACK_API + endpoint,
         data = json.dumps(data),
@@ -54,6 +53,7 @@ def profile_get(slack_id):
         return profile_cache[slack_id]
         
     res = gr('users.profile.get', { 'user': slack_id })
+    print(res)
     profile_cache[slack_id] = res['profile']
     return res['profile']
 
