@@ -2,6 +2,7 @@ import sys
 
 import dao
 import divvy
+import messages
 import slack
 
 
@@ -20,23 +21,32 @@ def create_bagel_instance(for_real):
         for group in groups:
             slack_group = [user.slack_id for user in group]
             slack_id = slack.mpim_create(slack_group)
+            slack.message_channel(slack_id, messages.introduction())
             dao.chat_create(instance, group, slack_id)
 
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
         print('Provide a command')
-    
-    elif sys.argv[1] == 'db-contents':
+
+    command = sys.argv[1]
+
+    if command == 'db-contents':
         dao.user_print_all()
         dao.chat_print_all()
         dao.bagel_instance_print_all()
 
-    elif sys.argv[1] == 'print':
+    elif command == 'print':
         create_bagel_instance(False)
-    
-    elif sys.argv[1] == 'make': 
+
+    elif command == 'make':
         create_bagel_instance(True)
+
+    elif command == 'remind':
+        dao.chat_message_all(messages.reminder())
+
+    elif command == 'remind-final':
+        dao.chat_message_all(messages.final_reminder())
 
     else:
         print('Invalid command: ' + sys.argv[1])
