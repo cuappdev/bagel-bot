@@ -51,7 +51,7 @@ def profile_get(slack_id):
     global profile_cache
     if slack_id in profile_cache:
         return profile_cache[slack_id]
-        
+
     res = gr('users.profile.get', { 'user': slack_id })
     profile_cache[slack_id] = res['profile']
     return res['profile']
@@ -75,7 +75,7 @@ def channel_leave(channel_id):
     })
 
 
-def message_channel(message, channel_id):
+def message_channel(channel_id, message):
     return pr('chat.postMessage', {
         'channel': channel_id,
         'icon_url': BAGEL_ICON_URL,
@@ -85,7 +85,7 @@ def message_channel(message, channel_id):
 
 
 def message_test_channel(message):
-    message_channel(message, TESTING_CHANNEL_ID)
+    message_channel(TESTING_CHANNEL_ID, message)
 
 
 # Group Management
@@ -95,8 +95,6 @@ def message_test_channel(message):
 def mpim_create(users):
     res = pr('conversations.open', { 'users': users })
     channel_id = res['channel']['id']
-
-    res = message_channel('Welcome to bagel chats, with a new and improved icon :bagel-bot::bagel-bot::bagel-bot:', channel_id)
     return channel_id
 
 
@@ -104,7 +102,7 @@ def mpim_get_all():
     return gr('users.conversations', { 'types': 'mpim' })
 
 
-def bagelers_slack_ids(): 
+def bagelers_slack_ids():
     res = gr('users.conversations')
     bagelers = set()
     for channel in res['channels']:
