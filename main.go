@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "github.com/op/go-logging"
     "os"
 )
@@ -19,21 +18,11 @@ func initializeLog() {
 
 func main() {
     initializeLog()
-    initializeDB()
+    d := Database{Filename: "data.db"}
+    d.initialize()
 
     slackApiKey := os.Getenv("BAGEL_SLACK_API_KEY")
     if len(slackApiKey) == 0 {
         log.Warning("Slack API key is missing; lots of errors ahead")
-    }
-
-
-    s := Slack{Token: slackApiKey}
-    slackUsers, err := s.usersList()
-    if err != nil {
-        log.Error(err)
-    }
-
-    for _, slackUser := range slackUsers {
-        fmt.Printf("%+v\n", slackUser)
     }
 }

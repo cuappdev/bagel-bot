@@ -15,12 +15,12 @@ type User struct {
 type Tag struct {
     gorm.Model
     Name string
-    Users []*User `gorm:many2many:users_tags;"`
+    Users []*User `gorm:"many2many:users_tags;"`
 }
 
 type Bagel struct {
     gorm.Model
-    Users []*User `gorm:many2many:users_bagel;"`
+    Users []*User `gorm:"many2many:users_bagel;"`
     BagelLogID uint
 }
 
@@ -30,10 +30,14 @@ type BagelLog struct {
     Date int64
 }
 
-func initializeDB() {
+type Database struct {
+    Filename string
+}
+
+func (d Database) initialize() {
     log.Info("Performing DB migration")
 
-    db, err := gorm.Open("sqlite3", "data.db")
+    db, err := gorm.Open("sqlite3", d.Filename)
     if err != nil {
         log.Critical(err.Error())
         panic("")
