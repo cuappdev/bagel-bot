@@ -1,17 +1,15 @@
 package main
 
 import (
-	"os"
 	"testing"
 )
 
 func NewTestingSlack(t *testing.T) Slack {
-	apiKey := os.Getenv("BAGEL_SLACK_API_KEY")
-	if len(apiKey) == 0 {
+	if len(SlackApiKey) == 0 {
 		t.Skip("Slack API key missing")
 	}
 
-	slack := Slack{Token: apiKey}
+	slack := Slack{Token: SlackApiKey}
 
 	err := slack.ApiTest()
 	if err != nil {

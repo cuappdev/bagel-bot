@@ -227,7 +227,8 @@ func (s Slack) getStrings(endpoint string, params map[string]string, contentKey 
 }
 
 func (s Slack) ApiTest() error {
-	_, _, err := s.get("api.test", map[string]string{"foo": "bar"}, "args")
+	contentKey := "args"
+	_, _, err := s.get("api.test", map[string]string{"foo": "bar"}, &contentKey)
 	return err
 }
 
@@ -253,7 +254,8 @@ func (s Slack) ConversationsMembers(channel string) ([]string, error) {
 
 func (s Slack) ConversationsOpen(users []string) (string, error) {
 	params := map[string]string{"users": strings.Join(users, ",")}
-	channelJson, _, err := s.get("conversations.open", params, "channel")
+	contentKey := "channel"
+	channelJson, _, err := s.get("conversations.open", params, &contentKey)
 	if err != nil {
 		return "", err
 	}

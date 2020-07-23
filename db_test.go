@@ -51,6 +51,7 @@ func ExampleDao_UsersTags() {
 	_ = db.Close()
 
 	// Output:
+	// Users:
 	// {1 Alice [] []}
 	// {2 Bob [] []}
 	// {3 Carol [] []}
