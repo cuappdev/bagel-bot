@@ -5,8 +5,7 @@ import (
 )
 
 func ExampleDao_UsersTags() {
-	d := NewDaoInMemory()
-	db := d.OpenDB()
+	db := OpenDBInMemory()
 	MigrateDB(db)
 
 	alice := User{Name: "Alice"}

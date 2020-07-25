@@ -31,48 +31,20 @@ type BagelLog struct {
 	Date   int64
 }
 
-type Dao struct {
-	filename string
-}
-
-func NewDao(filename string) Dao {
-	return Dao{filename: filename}
-}
-
-func NewDaoInMemory() Dao {
-	return Dao{filename: "file::memory:?cache=shared"}
-}
-
-func (d Dao) OpenDB() *gorm.DB {
-	db, err := gorm.Open("sqlite3", d.filename)
+func OpenDB(filename string) *gorm.DB {
+	db, err := gorm.Open("sqlite3", filename)
 	if err != nil {
 		panic(err)
 	}
 	return db
 }
 
+func OpenDBInMemory() *gorm.DB {
+	return OpenDB("file::memory:?cache=shared")
+}
+
 func MigrateDB(db *gorm.DB) {
 	db.AutoMigrate(&User{}, &Tag{}, &Bagel{}, &BagelLog{})
-}
-
-func (d Dao) MigrateDB() {
-	log.Info("Migrating database " + d.filename)
-	d.withDB(func(db *gorm.DB) {
-		MigrateDB(db)
-	})
-}
-
-func (d Dao) withDB(action func(*gorm.DB)) {
-	db := d.OpenDB()
-
-	defer func() {
-		err := db.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	action(db)
 }
 
 func DBDump(db *gorm.DB) *gorm.DB {
