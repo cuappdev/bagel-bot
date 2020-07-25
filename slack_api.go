@@ -15,6 +15,14 @@ type Slack struct {
 	HttpClient http.Client
 }
 
+type SlackError struct {
+	error
+}
+
+func (se *SlackError) Error() string {
+	return "slack error: " + se.error.Error()
+}
+
 type SlackResponseMetadata struct {
 	NextCursor string `mapstructure:"next_cursor"`
 }
@@ -100,7 +108,7 @@ func (s Slack) request(method string, endpoint string, params map[string]string,
 			return nil, nil, nil
 		}
 
-		return nil, nil, errors.New(errStr)
+		return nil, nil, &SlackError{errors.New(errStr)}
 	}
 
 	var contentJson interface{}
@@ -259,7 +267,7 @@ func (s Slack) ConversationsOpen(users []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return channelJson.(map[string]string)["id"], nil
+	return channelJson.(map[string]interface{})["id"].(string), nil
 }
 
 func (s Slack) UsersConversations(excludeArchived bool, types []string) ([]SlackChannel, error) {

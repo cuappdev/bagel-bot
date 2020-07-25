@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type CLITagCommand struct {
+type CmdTag struct {
 	Create bool `help:"Create the tag if it doesn't already exist" short:"c"`
 	Delete bool `help:"Delete the tag" short:"d"`
 	Remove bool `help:"Remove users from tag" short:"rm"`
@@ -16,7 +16,7 @@ type CLITagCommand struct {
 	Users []string `arg optional help:"Users to append"`
 }
 
-func (cmd *CLITagCommand) Run(ctx *kong.Context, db *gorm.DB) (err error) {
+func (cmd *CmdTag) Run(ctx *kong.Context, db *gorm.DB) (err error) {
 	switch ctx.Command() {
 	case "tag":
 		tags := []Tag{}

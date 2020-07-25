@@ -20,4 +20,5 @@ func main() {
 	MigrateDB(db)
 
 	go SlackEventsListenAndServe()
+	BagelRepl()
 }

@@ -18,7 +18,7 @@ func ExampleTag_ListTags() {
 		db.Create(tag)
 	}
 
-	if err := Run("tag", os.Stdout, os.Stdout, db); err != nil {
+	if err := Run("tag", os.Stdout, os.Stdout, db, nil); err != nil {
 		fmt.Println(err)
 	}
 
@@ -38,7 +38,7 @@ func ExampleTag_DeleteTag() {
 
 	db.Create(&Tag{Name: "backend"})
 
-	if err := Run("tag -d backend", os.Stdout, os.Stdout, db); err != nil {
+	if err := Run("tag -d backend", os.Stdout, os.Stdout, db, nil); err != nil {
 		fmt.Println(err)
 	}
 
@@ -61,7 +61,7 @@ func ExampleTag_Create() {
 
 	db.Create(&Tag{Name: "backend"})
 
-	if err := Run("tag -c frontend", os.Stdout, os.Stdout, db); err != nil {
+	if err := Run("tag -c frontend", os.Stdout, os.Stdout, db, nil); err != nil {
 		fmt.Println(err)
 	}
 
@@ -89,7 +89,7 @@ func ExampleTag_CreateWithUsers() {
 	db.Create(&User{Name: "megan"})
 	db.Create(&Tag{Name: "backend"})
 
-	if err := Run("tag -c frontend \"kevin chan\" megan", os.Stdout, os.Stdout, db); err != nil {
+	if err := Run("tag -c frontend \"kevin chan\" megan", os.Stdout, os.Stdout, db, nil); err != nil {
 		fmt.Println(err)
 	}
 
@@ -121,7 +121,7 @@ func ExampleTag_ListTaggedUsers() {
 		{Name: "megan"},
 	}})
 
-	if err := Run("tag backend", os.Stdout, os.Stdout, db); err != nil {
+	if err := Run("tag backend", os.Stdout, os.Stdout, db, nil); err != nil {
 		fmt.Println(err)
 	}
 
@@ -145,7 +145,7 @@ func ExampleTag_AddUsersToTag() {
 	db.Create(&Tag{Name: "frontend"})
 	db.Create(&Tag{Name: "backend"})
 
-	if err := Run("tag frontend \"kevin chan\" megan", os.Stdout, os.Stdout, db); err != nil {
+	if err := Run("tag frontend \"kevin chan\" megan", os.Stdout, os.Stdout, db, nil); err != nil {
 		fmt.Println(err)
 	}
 
@@ -179,7 +179,7 @@ func ExampleTag_RemoveUsersFromTag() {
 		},
 	})
 
-	if err := Run("tag frontend --remove \"kevin chan\"", os.Stdout, os.Stdout, db); err != nil {
+	if err := Run("tag frontend --remove \"kevin chan\"", os.Stdout, os.Stdout, db, nil); err != nil {
 		fmt.Println(err)
 	}
 

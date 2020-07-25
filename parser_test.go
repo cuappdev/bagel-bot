@@ -6,6 +6,23 @@ import (
 	"testing"
 )
 
+func TestParse_Help(t *testing.T) {
+	stdout := strings.Builder{}
+	_, _, _ = Parse("bagel --help", &stdout, nil)
+	assert.NotEmpty(t, stdout.String())
+	t.Log("\n" + stdout.String())
+
+	stdout = strings.Builder{}
+	_, _, _ = Parse("bagel tag --help", &stdout, nil)
+	assert.NotEmpty(t, stdout.String())
+	t.Log("\n" + stdout.String())
+
+	stdout = strings.Builder{}
+	_, _, _ = Parse("bagel divvy --help", &stdout, nil)
+	assert.NotEmpty(t, stdout.String())
+	t.Log("\n" + stdout.String())
+}
+
 func TestParse_Tag(t *testing.T) {
 	cli, context, err := Parse("bagel tag", nil, nil)
 	assert.Nil(t, err, err)
@@ -41,9 +58,22 @@ func TestParse_Tag(t *testing.T) {
 	assert.False(t, cli.Tag.Create)
 	assert.Equal(t, "backend", cli.Tag.Tag)
 	assert.Equal(t, []string{"megan", "kevin chan"}, cli.Tag.Users)
+}
 
-	stdout := strings.Builder{}
-	cli, context, err = Parse("bagel --help tag", &stdout, nil)
-	assert.Nil(t, err)
-	assert.NotEmpty(t, stdout.String())
+func TestParse_Divvy(t *testing.T) {
+	cli, context, err := Parse("bagel divvy", nil, nil)
+	assert.Nil(t, err, err)
+	assert.Equal(t, "divvy", context.Command())
+	assert.Equal(t, 2, cli.Divvy.Size)
+
+	cli, context, err = Parse("bagel divvy all", nil, nil)
+	assert.Nil(t, err, err)
+	assert.Equal(t, "divvy <tag>", context.Command())
+	assert.Equal(t, 2, cli.Divvy.Size)
+	assert.Equal(t, "all", cli.Divvy.Tag)
+
+	cli, context, err = Parse("bagel divvy --size 3 all", nil, nil)
+	assert.Nil(t, err, err)
+	assert.Equal(t, "divvy <tag>", context.Command())
+	assert.Equal(t, 3, cli.Divvy.Size)
 }

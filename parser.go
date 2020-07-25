@@ -4,12 +4,13 @@ import (
 	"encoding/csv"
 	"github.com/alecthomas/kong"
 	"io"
-	"os"
 	"strings"
 )
 
 type CLI struct {
-	Tag CLITagCommand `cmd`
+	Tag   CmdTag   `cmd`
+	Divvy CmdDivvy `cmd`
+	Sync  CmdSync  `cmd`
 }
 
 func Parse(input string, stdout io.Writer, stderr io.Writer) (*CLI, *kong.Context, error) {
@@ -26,12 +27,18 @@ func Parse(input string, stdout io.Writer, stderr io.Writer) (*CLI, *kong.Contex
 		fields = fields[1:]
 	}
 
-	parser, err := kong.New(&cli, kong.Writers(stdout, os.Stderr), kong.Exit(func(i int) {}))
+	exited := false
+	parser, err := kong.New(&cli, kong.Writers(stdout, stderr), kong.Exit(func(i int) {
+		exited = true
+	}))
 	if err != nil {
 		return nil, nil, err
 	}
 
 	context, err := parser.Parse(fields)
+	if exited {
+		return nil, nil, nil
+	}
 	if err != nil {
 		return nil, nil, err
 	}
