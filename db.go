@@ -30,6 +30,8 @@ type Bagel struct {
 	Users               []User `gorm:"many2many:user_bagels;"`
 	SlackConversationID string
 	BagelLogID          uint
+	DidPlanMeetUp       bool
+	DidMeetUp           bool
 }
 
 type BagelLog struct {

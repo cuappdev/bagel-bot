@@ -170,7 +170,7 @@ func addIntroduction(s *Slack, channelId string, userIds []string) (err error) {
 	rand.Seed(time.Now().UnixNano())
 	lines := introductions[rand.Intn(len(introductions))]
 	for _, line := range lines {
-		if err = s.ChatPostMessage(channelId, line); err != nil {
+		if err = s.ChatPostMessage(channelId, line, ""); err != nil {
 			return err
 		}
 	}

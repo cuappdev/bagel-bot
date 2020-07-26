@@ -81,6 +81,8 @@ func (s Slack) request(method string, endpoint string, params map[string]string,
 	}
 	req.URL.RawQuery = q.Encode()
 
+	req.Header.Add("Content-type", "application/x-www-form-urlencoded")
+
 	resp, err := s.HttpClient.Do(req)
 	if err != nil {
 		return nil, nil, err
@@ -244,8 +246,11 @@ func (s Slack) ApiTest() error {
 	return err
 }
 
-func (s Slack) ChatPostMessage(channel string, text string) error {
+func (s Slack) ChatPostMessage(channel string, text string, blocks string) error {
 	params := map[string]string{"channel": channel, "text": text}
+    if blocks != "" {
+        params["blocks"] = blocks
+    }
 	_, _, err := s.post("chat.postMessage", params, "")
 	return err
 }

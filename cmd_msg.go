@@ -34,7 +34,7 @@ func (cmd *CmdMsgSend) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error)
 		db.Model(&log).Association("Bagels").Find(&bagels)
 		for _, bagel := range bagels {
 			conversation := bagel.SlackConversationID
-			if err = s.ChatPostMessage(conversation, cmd.Text); err != nil {
+			if err = s.ChatPostMessage(conversation, cmd.Text, ""); err != nil {
 				_, err = io.WriteString(ctx.Stderr, err.Error())
 				return err
 			}
@@ -42,7 +42,7 @@ func (cmd *CmdMsgSend) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error)
 		return nil
 
 	case "msg send channel <slack-id>":
-		if err = s.ChatPostMessage(cmd.Channel.SlackID, cmd.Text); err != nil {
+		if err = s.ChatPostMessage(cmd.Channel.SlackID, cmd.Text, ""); err != nil {
 			_, err = io.WriteString(ctx.Stderr, err.Error())
 			return err
 		}
@@ -84,4 +84,10 @@ func (cmd *CmdMsgRead) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error)
 	default:
 		panic(ctx.Command())
 	}
+}
+
+type CmdMsgFeedback struct {
+	Log struct {
+		ID string `arg required help:"The id of the log to ask feedback to"`
+	} `cmd help:"Send feedback to a set of bagels previously created"`
 }

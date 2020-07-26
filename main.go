@@ -16,6 +16,6 @@ var log = func() *logging.Logger {
 }()
 
 func main() {
-	go SlackEventsListenAndServe()
+	go SlackListenAndServe()
 	BagelRepl()
 }
