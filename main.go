@@ -16,9 +16,6 @@ var log = func() *logging.Logger {
 }()
 
 func main() {
-	db := OpenDB("data.db")
-	MigrateDB(db)
-
 	go SlackEventsListenAndServe()
 	BagelRepl()
 }

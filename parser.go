@@ -17,7 +17,9 @@ type CLI struct {
 func Parse(input string, stdout io.Writer, stderr io.Writer) (cli *CLI, ctx *kong.Context, err error) {
 	cli = &CLI{}
 	args, err := shellwords.Parse(input)
-	if len(args) > 0 && args[0] == "bagel" {
+
+	bagelKeywords := map[string]bool{"bagel": true, "bagel-bot": true}
+	if len(args) > 0 && bagelKeywords[args[0]] {
 		args = args[1:]
 	}
 
