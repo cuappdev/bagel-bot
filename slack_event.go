@@ -6,14 +6,37 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func actionEventHandler(w http.ResponseWriter, r *http.Request) {
+	requestBody, err := verifyRequest(r)
+	if err != nil {
+		panic(err)
+	}
+
+	var jsonBody map[string]interface{}
+	err = json.Unmarshal(requestBody, &jsonBody)
+	if err != nil {
+		panic(err)
+	}
+
+	requestType := jsonBody["type"].(string)
+	switch requestType {
+	case "url_verification":
+		err = handleUrlVerification(w, r, jsonBody)
+	default:
+		log.Notice("Unhandled request type: " + requestType)
+	}
+	if err != nil {
+		panic(err)
+	}
+}
+
+func interactiveEndpointHandler(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := verifyRequest(r)
 	if err != nil {
 		panic(err)
@@ -56,8 +79,6 @@ func verifyRequest(r *http.Request) ([]byte, error) {
 
 	timestamp := r.Header.Get("X-Slack-Request-Timestamp")
 
-	fmt.Println(string(requestBody))
-
 	timestampInt, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {
 		return nil, err
@@ -80,7 +101,6 @@ func verifyRequest(r *http.Request) ([]byte, error) {
 	hexDigest := "v0=" + hex.EncodeToString(h.Sum(nil))
 
 	slackSignature := r.Header.Get("X-Slack-Signature")
-	fmt.Println(hexDigest, slackSignature)
 	if !hmac.Equal([]byte(hexDigest), []byte(slackSignature)) {
 		return nil, errors.New("computed signature and slack signature are not the same; possible malicious slack event")
 	}
@@ -95,6 +115,7 @@ func handleUrlVerification(w http.ResponseWriter, r *http.Request, requestBody m
 }
 
 func SlackEventsListenAndServe() {
-	http.HandleFunc("/slack/action-event", handler)
+	http.HandleFunc("/slack/action-event", actionEventHandler)
+	http.HandleFunc("/slack/interactive-endpoint", interactiveEndpointHandler)
 	log.Fatal(http.ListenAndServe(":29138", nil))
 }

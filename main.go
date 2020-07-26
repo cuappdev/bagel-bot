@@ -16,8 +16,6 @@ var log = func() *logging.Logger {
 }()
 
 func main() {
-	d := NewDao("data.db")
-	d.MigrateDB()
-
-	SlackEventsListenAndServe()
+	go SlackEventsListenAndServe()
+	BagelRepl()
 }
