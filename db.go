@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"strconv"
 	"strings"
 )
 
@@ -33,8 +34,23 @@ type Bagel struct {
 
 type BagelLog struct {
 	gorm.Model
-	Bagels []Bagel
-	Date   int64
+	Bagels     []Bagel
+	Date       int64
+	Invocation string
+}
+
+func BagelLog_Fetch(db *gorm.DB, id string) (log BagelLog, err error) {
+	if id == "last" {
+		db.Order("date desc").First(&log)
+	} else {
+		id, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			return BagelLog{}, err
+		}
+		db.Where("id = ?", id).First(&log)
+	}
+
+	return log, nil
 }
 
 func OpenDB(filename string) *gorm.DB {
@@ -130,4 +146,31 @@ func findChannel(s *Slack, name string) (channel *SlackChannel, err error) {
 		}
 	}
 	return nil, nil
+}
+
+func SyncBagels(db *gorm.DB, s *Slack) (err error) {
+	var bagels []Bagel
+	db.Find(&bagels)
+
+	for _, bagel := range bagels {
+		slackUserIds, err := s.ConversationsMembers(bagel.SlackConversationID)
+		if err != nil {
+			return err
+		}
+
+		db.Model(&bagel).Association("Users").Clear()
+
+		for _, slackId := range slackUserIds {
+			var dbUser User
+			db.Where("slack_id = ?", slackId).Find(&dbUser)
+			if dbUser.ID == 0 {
+				log.Errorf("no such user with slack id %s. Did we perform a SyncUser(db, s) before this?", slackId)
+				dbUser.SlackID = slackId
+			}
+
+			db.Model(&bagel).Association("Users").Append(&dbUser)
+		}
+	}
+
+	return nil
 }

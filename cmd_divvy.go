@@ -17,7 +17,7 @@ type CmdDivvy struct {
 	Tag    string `arg optional help:"Divvy the tagged users. By default, bagel divvies the users in the #bagel-chats channel"`
 }
 
-func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error) {
+func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack, invocation Invocation) (err error) {
 	if cmd.Size < 2 {
 		if _, err = io.WriteString(ctx.Stderr, "size must be >= 2"); err != nil {
 			return err
@@ -66,7 +66,8 @@ func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error) {
 	}
 
 	bagelLog := BagelLog{
-		Date: time.Now().Unix(),
+		Date:       time.Now().Unix(),
+		Invocation: string(invocation),
 	}
 	db.Create(&bagelLog)
 
@@ -83,10 +84,10 @@ func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error) {
 
 		db.Model(&bagelLog).Association("Bagel")
 		bagel := Bagel{
-			Users:               group,
 			SlackConversationID: slackConvId,
 		}
 		db.Create(&bagel)
+		db.Model(&bagel).Association("Users").Append(&users)
 		db.Model(&bagelLog).Association("Bagels").Append(&bagel)
 
 		if err = addIntroduction(s, slackConvId, userIds); err != nil {

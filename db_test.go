@@ -42,7 +42,7 @@ func ExampleDB_UsersTags() {
 	db.Model(&alice).Association("Tags").Find(&tags)
 	fmt.Print("Before: ")
 	for i, tag := range tags {
-		if i < len(tags) - 1 {
+		if i < len(tags)-1 {
 			fmt.Print(tag.Name + " ")
 		} else {
 			fmt.Print(tag.Name)
@@ -56,7 +56,7 @@ func ExampleDB_UsersTags() {
 	db.Model(&alice).Association("Tags").Find(&tags)
 	fmt.Print("After: ")
 	for i, tag := range tags {
-		if i < len(tags) - 1 {
+		if i < len(tags)-1 {
 			fmt.Print(tag.Name + " ")
 		} else {
 			fmt.Print(tag.Name)
@@ -91,12 +91,12 @@ func ExampleDB_BagelLogs() {
 	for i := 0; i < 5; i++ {
 		db.Create(&Bagel{
 			SlackConversationID: strconv.Itoa(1000 + i),
-			BagelLogID: log.ID,
+			BagelLogID:          log.ID,
 		})
 	}
 
 	var bagels []Bagel
-	db.Model(&log).Association("Bagels").Find(&bagels)
+	db.Model(&log).Related(&bagels)
 	for _, bagel := range bagels {
 		fmt.Println(bagel.SlackConversationID, bagel.BagelLogID)
 	}

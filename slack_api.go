@@ -60,7 +60,14 @@ type SlackChannel struct {
 	NumMembers int    `mapstructure:"num_members"`
 }
 
-func (s Slack) request(method string, endpoint string, params map[string]string, contentKey *string) (interface{}, *SlackResponseMetadata, error) {
+type SlackMessage struct {
+	Type      string `mapstructure:"type"`
+	User      string `mapstructure:"user"`
+	Text      string `mapstructure:"text"`
+	Timestamp string `mapstructure:"ts"`
+}
+
+func (s Slack) request(method string, endpoint string, params map[string]string, contentKey string) (interface{}, *SlackResponseMetadata, error) {
 	req, err := http.NewRequest(method, "https://slack.com/api/"+endpoint, nil)
 	if err != nil {
 		return nil, nil, err
@@ -112,11 +119,11 @@ func (s Slack) request(method string, endpoint string, params map[string]string,
 	}
 
 	var contentJson interface{}
-	if contentKey != nil {
+	if contentKey != "" {
 		var present bool
-		contentJson, present = topLevelJsonResp[*contentKey]
+		contentJson, present = topLevelJsonResp[contentKey]
 		if !present {
-			return nil, nil, errors.New("response is missing " + *contentKey)
+			return nil, nil, errors.New("response is missing " + contentKey)
 		}
 	}
 
@@ -132,15 +139,15 @@ func (s Slack) request(method string, endpoint string, params map[string]string,
 	return contentJson, metadata, nil
 }
 
-func (s Slack) get(endpoint string, params map[string]string, contentKey *string) (interface{}, *SlackResponseMetadata, error) {
+func (s Slack) get(endpoint string, params map[string]string, contentKey string) (interface{}, *SlackResponseMetadata, error) {
 	return s.request("GET", endpoint, params, contentKey)
 }
 
-func (s Slack) post(endpoint string, params map[string]string, contentKey *string) (interface{}, *SlackResponseMetadata, error) {
+func (s Slack) post(endpoint string, params map[string]string, contentKey string) (interface{}, *SlackResponseMetadata, error) {
 	return s.request("POST", endpoint, params, contentKey)
 }
 
-func (s Slack) cursorCollect(endpoint string, params map[string]string, contentKey *string, initialValue interface{}, collect func(interface{}, interface{}) (interface{}, error)) (interface{}, error) {
+func (s Slack) cursorCollect(endpoint string, params map[string]string, contentKey string, initialValue interface{}, collect func(interface{}, interface{}) (interface{}, error)) (interface{}, error) {
 	cursor := ""
 
 	for {
@@ -172,11 +179,10 @@ func (s Slack) cursorCollect(endpoint string, params map[string]string, contentK
 }
 
 func (s Slack) getChannels(endpoint string, params map[string]string) ([]SlackChannel, error) {
-	contentKey := "channels"
 	collected, err := s.cursorCollect(
 		endpoint,
 		params,
-		&contentKey,
+		"channels",
 		[]SlackChannel{},
 		func(collected interface{}, json interface{}) (interface{}, error) {
 			var partial []SlackChannel
@@ -194,11 +200,10 @@ func (s Slack) getChannels(endpoint string, params map[string]string) ([]SlackCh
 }
 
 func (s Slack) getMembers(endpoint string, params map[string]string) ([]SlackUser, error) {
-	contentKey := "members"
 	collected, err := s.cursorCollect(
 		endpoint,
 		params,
-		&contentKey,
+		"members",
 		[]SlackUser{},
 		func(collected interface{}, json interface{}) (interface{}, error) {
 			var partial []SlackUser
@@ -218,7 +223,7 @@ func (s Slack) getStrings(endpoint string, params map[string]string, contentKey 
 	collected, err := s.cursorCollect(
 		endpoint,
 		params,
-		&contentKey,
+		contentKey,
 		[]string{},
 		func(collected interface{}, json interface{}) (interface{}, error) {
 			var partial []string
@@ -235,15 +240,29 @@ func (s Slack) getStrings(endpoint string, params map[string]string, contentKey 
 }
 
 func (s Slack) ApiTest() error {
-	contentKey := "args"
-	_, _, err := s.get("api.test", map[string]string{"foo": "bar"}, &contentKey)
+	_, _, err := s.get("api.test", map[string]string{"foo": "bar"}, "args")
 	return err
 }
 
 func (s Slack) ChatPostMessage(channel string, text string) error {
 	params := map[string]string{"channel": channel, "text": text}
-	_, _, err := s.post("chat.postMessage", params, nil)
+	_, _, err := s.post("chat.postMessage", params, "")
 	return err
+}
+
+func (s Slack) ConversationsHistory(channel string, limit int) ([]SlackMessage, error) {
+	params := map[string]string{"channel": channel, "limit": strconv.Itoa(limit)}
+	content, _, err := s.get("conversations.history", params, "messages")
+	if err != nil {
+		return nil, err
+	}
+
+	var messages []SlackMessage
+	if err = mapstructure.Decode(content, &messages); err != nil {
+		return nil, err
+	}
+
+	return messages, err
 }
 
 func (s Slack) ConversationsList(excludeArchived bool, types []string) ([]SlackChannel, error) {
@@ -262,8 +281,7 @@ func (s Slack) ConversationsMembers(channel string) ([]string, error) {
 
 func (s Slack) ConversationsOpen(users []string) (string, error) {
 	params := map[string]string{"users": strings.Join(users, ",")}
-	contentKey := "channel"
-	channelJson, _, err := s.get("conversations.open", params, &contentKey)
+	channelJson, _, err := s.get("conversations.open", params, "channel")
 	if err != nil {
 		return "", err
 	}

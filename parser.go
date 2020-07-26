@@ -1,41 +1,35 @@
 package main
 
 import (
-	"encoding/csv"
 	"github.com/alecthomas/kong"
+	"github.com/mattn/go-shellwords"
 	"io"
-	"strings"
 )
 
 type CLI struct {
-	Tag   CmdTag   `cmd`
-	Divvy CmdDivvy `cmd`
-	Sync  CmdSync  `cmd`
+	Tag   CmdTag   `cmd help:"Create/delete tags; View/add/remove users from tags;"`
+	Divvy CmdDivvy `cmd help:"Divvy the users in the bagel-chats channel or with a specific tag"`
+	Sync  CmdSync  `cmd help:"Sync data with slack"`
+	Log   CmdLog   `cmd help:"View bagels that were previously made"`
+	Msg   CmdMsg   `cmd help:"Read/send messages to groups"`
 }
 
-func Parse(input string, stdout io.Writer, stderr io.Writer) (*CLI, *kong.Context, error) {
-	cli := CLI{}
-
-	reader := csv.NewReader(strings.NewReader(input))
-	reader.Comma = ' '
-	fields, err := reader.Read()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if len(fields) > 0 && fields[0] == "bagel" {
-		fields = fields[1:]
+func Parse(input string, stdout io.Writer, stderr io.Writer) (cli *CLI, ctx *kong.Context, err error) {
+	cli = &CLI{}
+	args, err := shellwords.Parse(input)
+	if len(args) > 0 && args[0] == "bagel" {
+		args = args[1:]
 	}
 
 	exited := false
-	parser, err := kong.New(&cli, kong.Writers(stdout, stderr), kong.Exit(func(i int) {
+	parser, err := kong.New(cli, kong.Writers(stdout, stderr), kong.Exit(func(i int) {
 		exited = true
 	}))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	context, err := parser.Parse(fields)
+	ctx, err = parser.Parse(args)
 	if exited {
 		return nil, nil, nil
 	}
@@ -43,5 +37,5 @@ func Parse(input string, stdout io.Writer, stderr io.Writer) (*CLI, *kong.Contex
 		return nil, nil, err
 	}
 
-	return &cli, context, nil
+	return cli, ctx, nil
 }
