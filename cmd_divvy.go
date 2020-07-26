@@ -37,6 +37,7 @@ func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack, invocation In
 		db.Model(&tag).Association("Users").Find(&users)
 	}
 
+	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(users), func(i, j int) {
 		temp := users[i]
 		users[i] = users[j]
@@ -166,6 +167,7 @@ func addIntroduction(s *Slack, channelId string, userIds []string) (err error) {
 		},
 	}
 
+	rand.Seed(time.Now().UnixNano())
 	lines := introductions[rand.Intn(len(introductions))]
 	for _, line := range lines {
 		if err = s.ChatPostMessage(channelId, line); err != nil {

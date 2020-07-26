@@ -12,7 +12,31 @@ import (
 	"time"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func actionEventHandler(w http.ResponseWriter, r *http.Request) {
+	requestBody, err := verifyRequest(r)
+	if err != nil {
+		panic(err)
+	}
+
+	var jsonBody map[string]interface{}
+	err = json.Unmarshal(requestBody, &jsonBody)
+	if err != nil {
+		panic(err)
+	}
+
+	requestType := jsonBody["type"].(string)
+	switch requestType {
+	case "url_verification":
+		err = handleUrlVerification(w, r, jsonBody)
+	default:
+		log.Notice("Unhandled request type: " + requestType)
+	}
+	if err != nil {
+		panic(err)
+	}
+}
+
+func interactiveEndpointHandler(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := verifyRequest(r)
 	if err != nil {
 		panic(err)
@@ -91,6 +115,7 @@ func handleUrlVerification(w http.ResponseWriter, r *http.Request, requestBody m
 }
 
 func SlackEventsListenAndServe() {
-	http.HandleFunc("/slack/action-event", handler)
+	http.HandleFunc("/slack/action-event", actionEventHandler)
+	http.HandleFunc("/slack/interactive-endpoint", interactiveEndpointHandler)
 	log.Fatal(http.ListenAndServe(":29138", nil))
 }
