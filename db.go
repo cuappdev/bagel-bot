@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"strconv"
@@ -30,8 +31,9 @@ type Bagel struct {
 	Users               []User `gorm:"many2many:user_bagels;"`
 	SlackConversationID string
 	BagelLogID          uint
-	DidPlanMeetUp       bool
-	DidMeetUp           bool
+	IsPlanned           bool
+	IsCompleted         bool
+	FeedbackMsgs        []FeedbackMsg
 }
 
 type BagelLog struct {
@@ -55,6 +57,71 @@ func BagelLog_Fetch(db *gorm.DB, id string) (log BagelLog, err error) {
 	return log, nil
 }
 
+type FeedbackMsg struct {
+	gorm.Model
+	BagelID            uint
+	IncompleteActionID string
+	PlannedActionID    string
+	CompletedActionID  string
+}
+
+func FeedbackMsg_Create(db *gorm.DB) FeedbackMsg {
+	feedbackMsg := FeedbackMsg{
+		IncompleteActionID: "feedback_msg:" + uuid.New().String(),
+		PlannedActionID:    "feedback_msg:" + uuid.New().String(),
+		CompletedActionID:  "feedback_msg:" + uuid.New().String(),
+	}
+
+	db.Create(&feedbackMsg)
+
+	return feedbackMsg
+}
+
+func (msg *FeedbackMsg) SlackBlocks(text string) []interface{} {
+	if text == "" {
+		text = "How's it going? I'm here to get an update on the status of your bagel chat 😁"
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"type": "section",
+			"text": map[string]interface{}{
+				"type": "mrkdwn",
+				"text": text,
+			},
+		},
+		map[string]interface{}{
+			"type": "actions",
+			"elements": []map[string]interface{}{
+				{
+					"type":      "button",
+					"action_id": msg.IncompleteActionID,
+					"text": map[string]string{
+						"type": "plain_text",
+						"text": "We're not planning to meet",
+					},
+				},
+				{
+					"type":      "button",
+					"action_id": msg.PlannedActionID,
+					"text": map[string]string{
+						"type": "plain_text",
+						"text": "We've planned our bagel chat",
+					},
+				},
+				{
+					"type":      "button",
+					"action_id": msg.CompletedActionID,
+					"text": map[string]string{
+						"type": "plain_text",
+						"text": "We've had our bagel chat",
+					},
+				},
+			},
+		},
+	}
+}
+
 func OpenDB(filename string) *gorm.DB {
 	db, err := gorm.Open("sqlite3", filename)
 	if err != nil {
@@ -68,7 +135,7 @@ func OpenDBInMemory() *gorm.DB {
 }
 
 func MigrateDB(db *gorm.DB) {
-	db.AutoMigrate(&User{}, &Tag{}, &Bagel{}, &BagelLog{})
+	db.AutoMigrate(&User{}, &Tag{}, &Bagel{}, &BagelLog{}, &FeedbackMsg{})
 }
 
 func DBDump(db *gorm.DB) *gorm.DB {

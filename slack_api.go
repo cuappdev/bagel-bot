@@ -246,12 +246,29 @@ func (s Slack) ApiTest() error {
 	return err
 }
 
-func (s Slack) ChatPostMessage(channel string, text string, blocks string) error {
+func (s Slack) ChatPostMessage(channel string, text string, blocks []interface{}) error {
 	params := map[string]string{"channel": channel, "text": text}
-    if blocks != "" {
-        params["blocks"] = blocks
+    if blocks != nil {
+    	jsonBlock, err := json.Marshal(blocks)
+    	if err != nil {
+    		return err
+		}
+        params["blocks"] = string(jsonBlock)
     }
 	_, _, err := s.post("chat.postMessage", params, "")
+	return err
+}
+
+func (s Slack) ChatUpdate(channel string, ts string, text string, blocks []interface{}) error {
+	params := map[string]string{"channel": channel, "ts": ts, "text": text}
+	if blocks != nil {
+		jsonBlock, err := json.Marshal(blocks)
+		if err != nil {
+			return err
+		}
+		params["blocks"] = string(jsonBlock)
+	}
+	_, _, err := s.post("chat.update", params, "")
 	return err
 }
 

@@ -17,7 +17,7 @@ type CmdDivvy struct {
 	Tag    string `arg optional help:"Divvy the tagged users. By default, bagel divvies the users in the #bagel-chats channel"`
 }
 
-func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack, invocation Invocation) (err error) {
+func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack, invocation *Invocation) (err error) {
 	if cmd.Size < 2 {
 		if _, err = io.WriteString(ctx.Stderr, "size must be >= 2"); err != nil {
 			return err
@@ -34,6 +34,11 @@ func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack, invocation In
 	} else {
 		var tag Tag
 		db.Where("name = ?", cmd.Tag).First(&tag)
+		if tag.ID == 0 {
+			_, err = io.WriteString(ctx.Stderr, "no such tag "+cmd.Tag+"\n")
+			return err
+		}
+
 		db.Model(&tag).Association("Users").Find(&users)
 	}
 
@@ -68,7 +73,7 @@ func (cmd *CmdDivvy) Run(ctx *kong.Context, db *gorm.DB, s *Slack, invocation In
 
 	bagelLog := BagelLog{
 		Date:       time.Now().Unix(),
-		Invocation: string(invocation),
+		Invocation: string(*invocation),
 	}
 	db.Create(&bagelLog)
 
@@ -170,7 +175,7 @@ func addIntroduction(s *Slack, channelId string, userIds []string) (err error) {
 	rand.Seed(time.Now().UnixNano())
 	lines := introductions[rand.Intn(len(introductions))]
 	for _, line := range lines {
-		if err = s.ChatPostMessage(channelId, line, ""); err != nil {
+		if err = s.ChatPostMessage(channelId, line, nil); err != nil {
 			return err
 		}
 	}

@@ -5,11 +5,13 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/jinzhu/gorm"
 	"io"
+	"strconv"
 )
 
 type CmdMsg struct {
-	Send CmdMsgSend `cmd`
-	Read CmdMsgRead `cmd`
+	Send     CmdMsgSend     `cmd`
+	Read     CmdMsgRead     `cmd`
+	Feedback CmdMsgFeedback `cmd`
 }
 
 type CmdMsgSend struct {
@@ -34,7 +36,7 @@ func (cmd *CmdMsgSend) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error)
 		db.Model(&log).Association("Bagels").Find(&bagels)
 		for _, bagel := range bagels {
 			conversation := bagel.SlackConversationID
-			if err = s.ChatPostMessage(conversation, cmd.Text, ""); err != nil {
+			if err = s.ChatPostMessage(conversation, cmd.Text, nil); err != nil {
 				_, err = io.WriteString(ctx.Stderr, err.Error())
 				return err
 			}
@@ -42,7 +44,7 @@ func (cmd *CmdMsgSend) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error)
 		return nil
 
 	case "msg send channel <slack-id>":
-		if err = s.ChatPostMessage(cmd.Channel.SlackID, cmd.Text, ""); err != nil {
+		if err = s.ChatPostMessage(cmd.Channel.SlackID, cmd.Text, nil); err != nil {
 			_, err = io.WriteString(ctx.Stderr, err.Error())
 			return err
 		}
@@ -88,6 +90,58 @@ func (cmd *CmdMsgRead) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error)
 
 type CmdMsgFeedback struct {
 	Log struct {
-		ID string `arg required help:"The id of the log to ask feedback to"`
-	} `cmd help:"Send feedback to a set of bagels previously created"`
+		ID string `arg required help:"The id of the log to ask feedback from"`
+	} `cmd help:"Send feedback request to a set of bagels previously created"`
+	Bagel struct {
+		ID int `arg required help:"The id of the bagel to ask feedback from"`
+	} `cmd help:"Send feedback request to a specific bagel"`
+}
+
+func (cmd *CmdMsgFeedback) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error) {
+	text := "Could I get an update on the status of your bagel chat?"
+
+	switch ctx.Command() {
+	case "msg feedback log <id>":
+		log, err := BagelLog_Fetch(db, cmd.Log.ID)
+		if err != nil {
+			return err
+		}
+
+		var bagels []Bagel
+		db.Model(&log).Association("Bagels").Find(&bagels)
+		for _, bagel := range bagels {
+			feedbackMsg := FeedbackMsg_Create(db)
+			db.Model(&bagel).Association("FeedbackMsgs").Append(&feedbackMsg)
+			blocks := feedbackMsg.SlackBlocks("")
+
+			conversation := bagel.SlackConversationID
+			if err = s.ChatPostMessage(conversation, text, blocks); err != nil {
+				_, err = io.WriteString(ctx.Stderr, err.Error())
+				return err
+			}
+		}
+		return nil
+
+	case "msg feedback bagel <id>":
+		var bagel Bagel
+		db.Where("id = ?", cmd.Bagel.ID).First(&bagel)
+		if bagel.ID == 0 {
+			_, err = io.WriteString(ctx.Stderr, "no such bagel "+strconv.Itoa(cmd.Bagel.ID))
+			return err
+		}
+
+		feedbackMsg := FeedbackMsg_Create(db)
+		db.Model(&bagel).Association("FeedbackMsgs").Append(&feedbackMsg)
+		blocks := feedbackMsg.SlackBlocks("")
+
+		conversation := bagel.SlackConversationID
+		if err = s.ChatPostMessage(conversation, text, blocks); err != nil {
+			_, err = io.WriteString(ctx.Stderr, err.Error())
+			return err
+		}
+		return nil
+
+	default:
+		panic(ctx.Command())
+	}
 }

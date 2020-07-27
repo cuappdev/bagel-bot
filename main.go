@@ -16,6 +16,19 @@ var log = func() *logging.Logger {
 }()
 
 func main() {
-	go SlackListenAndServe()
-	BagelRepl()
+	db := OpenDB("data.db")
+	MigrateDB(db)
+
+	if SlackApiKey == "" {
+		log.Warning("Slack API key missing; prepare for lots of errors")
+	}
+	s := &Slack{Token: SlackApiKey}
+
+	go SlackListenAndServe(db, s)
+	BagelRepl(db, s)
+
+	log.Debug("Closing connection to DB")
+	if err := db.Close(); err != nil {
+		panic(err)
+	}
 }

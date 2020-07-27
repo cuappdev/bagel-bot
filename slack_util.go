@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"github.com/jinzhu/gorm"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -59,9 +60,9 @@ func verifyRequest(r *http.Request) ([]byte, error) {
 	return requestBody, nil
 }
 
-func SlackListenAndServe() {
-	http.HandleFunc("/slack/action-event", SlackEvent_Handler)
-	http.HandleFunc("/slack/interactive-endpoint", SlackInteractive_Handler)
-	log.Fatal(http.ListenAndServe(":29138", nil))
+func SlackListenAndServe(db *gorm.DB, slack *Slack) {
+	http.Handle("/slack/action-event", SlackEventHandler{DB: db, Slack: slack})
+	http.Handle("/slack/interactive-endpoint", SlackInteractiveHandler{DB: db, Slack: slack})
+	log.Fatal(http.ListenAndServe(":29139", nil))
 }
 

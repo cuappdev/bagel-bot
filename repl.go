@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/alecthomas/kong"
+	"github.com/jinzhu/gorm"
 	"os"
 	"strings"
 )
@@ -24,17 +25,12 @@ func shouldContinue(text string) bool {
 	return true
 }
 
-func BagelRepl() {
-	db := OpenDB("data.db")
-	MigrateDB(db)
-
-	s := Slack{Token: SlackApiKey}
-
+func BagelRepl(db *gorm.DB, s *Slack) {
 	reader := bufio.NewReader(os.Stdin)
 	printRepl()
 	text := get(reader)
 	for ; shouldContinue(text); text = get(reader) {
-		if err := Run(text, os.Stdout, os.Stderr, db, &s); err != nil {
+		if err := Run(text, os.Stdout, os.Stderr, db, s); err != nil {
 			if parseError, success := err.(kong.ParseError); success {
 				fmt.Println(parseError)
 			} else {
@@ -42,10 +38,5 @@ func BagelRepl() {
 			}
 		}
 		printRepl()
-	}
-
-	log.Debug("Closing connection to DB")
-	if err := db.Close(); err != nil {
-		panic(err)
 	}
 }

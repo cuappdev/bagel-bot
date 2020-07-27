@@ -2,10 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/jinzhu/gorm"
 	"net/http"
 )
 
-func SlackEvent_Handler(w http.ResponseWriter, r *http.Request) {
+type SlackEventHandler struct {
+	DB *gorm.DB
+	Slack *Slack
+}
+
+func (params SlackEventHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := verifyRequest(r)
 	if err != nil {
 		panic(err)
@@ -18,6 +24,7 @@ func SlackEvent_Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	requestType := jsonBody["type"].(string)
+	log.Info("Handling event of type", requestType)
 	switch requestType {
 	case "url_verification":
 		err = handleUrlVerification(w, r, jsonBody)
