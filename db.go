@@ -1,12 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"strconv"
-	"strings"
 )
 
 type User struct {
@@ -31,6 +31,7 @@ type Bagel struct {
 	Users               []User `gorm:"many2many:user_bagels;"`
 	SlackConversationID string
 	BagelLogID          uint
+	FeedbackDate        uint
 	IsPlanned           bool
 	IsCompleted         bool
 	FeedbackMsgs        []FeedbackMsg
@@ -54,6 +55,10 @@ func BagelLog_Fetch(db *gorm.DB, id string) (log BagelLog, err error) {
 		db.Where("id = ?", id).First(&log)
 	}
 
+	if log.ID == 0 {
+		return BagelLog{}, errors.New("no such bagel log with id " + id)
+	}
+
 	return log, nil
 }
 
@@ -75,51 +80,6 @@ func FeedbackMsg_Create(db *gorm.DB) FeedbackMsg {
 	db.Create(&feedbackMsg)
 
 	return feedbackMsg
-}
-
-func (msg *FeedbackMsg) SlackBlocks(text string) []interface{} {
-	if text == "" {
-		text = "How's it going? I'm here to get an update on the status of your bagel chat 😁"
-	}
-
-	return []interface{}{
-		map[string]interface{}{
-			"type": "section",
-			"text": map[string]interface{}{
-				"type": "mrkdwn",
-				"text": text,
-			},
-		},
-		map[string]interface{}{
-			"type": "actions",
-			"elements": []map[string]interface{}{
-				{
-					"type":      "button",
-					"action_id": msg.IncompleteActionID,
-					"text": map[string]string{
-						"type": "plain_text",
-						"text": "We're not planning to meet",
-					},
-				},
-				{
-					"type":      "button",
-					"action_id": msg.PlannedActionID,
-					"text": map[string]string{
-						"type": "plain_text",
-						"text": "We've planned our bagel chat",
-					},
-				},
-				{
-					"type":      "button",
-					"action_id": msg.CompletedActionID,
-					"text": map[string]string{
-						"type": "plain_text",
-						"text": "We've had our bagel chat",
-					},
-				},
-			},
-		},
-	}
 }
 
 func OpenDB(filename string) *gorm.DB {
@@ -176,7 +136,7 @@ func SyncUsers(db *gorm.DB, s *Slack) (err error) {
 	}
 
 	log.Debug("Syncing with bagel-chats channel")
-	bagelChats, err := findChannel(s, "bagel-testing")
+	bagelChats, err := s.FindChannel("bagel-testing", "")
 	if err != nil {
 		return err
 	}
@@ -201,20 +161,6 @@ func SyncUsers(db *gorm.DB, s *Slack) (err error) {
 	}
 
 	return nil
-}
-
-func findChannel(s *Slack, name string) (channel *SlackChannel, err error) {
-	channels, err := s.UsersConversations(true, []string{"public_channel"})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, channel := range channels {
-		if strings.EqualFold(name, channel.Name) {
-			return &channel, nil
-		}
-	}
-	return nil, nil
 }
 
 func SyncBagels(db *gorm.DB, s *Slack) (err error) {

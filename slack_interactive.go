@@ -94,11 +94,11 @@ func (params SlackInteractiveHandler) handleFeedbackMsg(reqBody map[string]inter
 
 	var blocks []interface{}
 	if incomplete {
-		blocks = feedbackMsg.SlackBlocks("😥 I'm sad that you've decided not to meet up. If you change your mind, you can always push the buttons below to let me know.")
+		blocks = SlackBlocks_FeedbackMsg(feedbackMsg, "😥 I'm sad that you've decided not to meet up. If you change your mind, you can always push the buttons below to let me know.")
 	} else if planned {
-		blocks = feedbackMsg.SlackBlocks("😀 Great! I'm exited that you've planned to chat. Once you do meet up, go ahead and push the button below to let me know you've 🥯'd. And don't forget about posting a selfie to the #bagel-chats channel!")
+		blocks = SlackBlocks_FeedbackMsg(feedbackMsg, "😀 Great! I'm exited that you've planned to chat. Once you do meet up, go ahead and push the button below to let me know you've 🥯'd. And don't forget about posting a selfie to the #bagel-chats channel.")
 	} else if completed {
-		blocks = feedbackMsg.SlackBlocks("😁 Perfect! Thank you for contributing to AppDev's social culture.")
+		blocks = SlackBlocks_FeedbackMsg(feedbackMsg, "😁 Perfect! Thank you for contributing to AppDev's social culture.")
 	}
 
 	var ok bool

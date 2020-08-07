@@ -322,3 +322,29 @@ func (s Slack) UsersConversations(excludeArchived bool, types []string) ([]Slack
 func (s Slack) UsersList() ([]SlackUser, error) {
 	return s.getMembers("users.list", nil)
 }
+
+func (s Slack) FindChannel(name, id string) (channel *SlackChannel, err error) {
+	channels, err := s.UsersConversations(true, []string{"public_channel"})
+	if err != nil {
+		return nil, err
+	}
+
+	if name != "" {
+		for _, channel := range channels {
+			if strings.EqualFold(name, channel.Name) {
+				return &channel, nil
+			}
+		}
+	}
+
+	if id != "" {
+		for _, channel := range channels {
+			if id == channel.ID {
+				return &channel, nil
+			}
+		}
+	}
+
+	return nil, nil
+
+}
