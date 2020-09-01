@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/alecthomas/kong"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"io"
 	"strings"
 	"time"

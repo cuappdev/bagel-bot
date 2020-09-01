@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 	"strconv"

@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/alecthomas/kong"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"os"
 	"strings"
 )

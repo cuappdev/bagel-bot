@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 )
 

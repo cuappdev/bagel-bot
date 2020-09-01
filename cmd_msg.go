@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/alecthomas/kong"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"io"
 	"strconv"
 )
@@ -75,8 +75,8 @@ func (cmd *CmdMsgRead) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error)
 }
 
 type CmdMsgFeedback struct {
-	Log   string `required help:"The id of the log to ask feedback from"`
-	Bagel int    `required help:"The id of the bagel to ask feedback from"`
+	Log   string `help:"The id of the log to ask feedback from"`
+	Bagel int    `help:"The id of the bagel to ask feedback from"`
 }
 
 func (cmd *CmdMsgFeedback) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error) {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"net/http"
 	"net/url"
 	"strings"
@@ -69,13 +69,19 @@ func (params SlackInteractiveHandler) handleFeedbackMsg(reqBody map[string]inter
 	var incomplete, planned, completed bool
 
 	if params.DB.Where("incomplete_action_id = ?", actionId).Find(&feedbackMsg); feedbackMsg.ID != 0 {
-		params.DB.Model(&feedbackMsg).Related(&bagel)
+		if err := params.DB.Model(&feedbackMsg).Association("bagels").Find(&bagel); err != nil {
+			return err
+		}
 		incomplete = true
 	} else if params.DB.Where("planned_action_id = ?", actionId).Find(&feedbackMsg); feedbackMsg.ID != 0 {
-		params.DB.Model(&feedbackMsg).Related(&bagel)
+		if err := params.DB.Model(&feedbackMsg).Association("bagels").Find(&bagel); err != nil {
+			return err
+		}
 		planned = true
 	} else if params.DB.Where("completed_action_id = ?", actionId).Find(&feedbackMsg); feedbackMsg.ID != 0 {
-		params.DB.Model(&feedbackMsg).Related(&bagel)
+		if err := params.DB.Model(&feedbackMsg).Association("bagels").Find(&bagel); err != nil {
+			return err
+		}
 		completed = true
 	} else {
 		log.Warning("unable to find feedback msg with actionId ", actionId)

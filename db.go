@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/driver/postgres"
 	"strconv"
 )
 
@@ -82,8 +83,8 @@ func FeedbackMsg_Create(db *gorm.DB) FeedbackMsg {
 	return feedbackMsg
 }
 
-func OpenDB(filename string) *gorm.DB {
-	db, err := gorm.Open("sqlite3", filename)
+func OpenSqlite3DBLocal(filename string) *gorm.DB {
+	db, err := gorm.Open(sqlite.Open(filename), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
@@ -91,11 +92,17 @@ func OpenDB(filename string) *gorm.DB {
 }
 
 func OpenDBInMemory() *gorm.DB {
-	return OpenDB("file::memory:?cache=shared")
+	return OpenSqlite3DBLocal("file::memory:?cache=shared")
 }
 
-func MigrateDB(db *gorm.DB) {
-	db.AutoMigrate(&User{}, &Tag{}, &Bagel{}, &BagelLog{}, &FeedbackMsg{})
+func OpenPostgresDB(host, port, user, password, dbname string) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", host, port, user, password, dbname)
+	fmt.Println(dsn)
+	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+}
+
+func MigrateDB(db *gorm.DB) error {
+	return db.AutoMigrate(&User{}, &Tag{}, &Bagel{}, &BagelLog{}, &FeedbackMsg{})
 }
 
 func DBDump(db *gorm.DB) *gorm.DB {

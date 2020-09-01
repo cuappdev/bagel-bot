@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"io"
 )
 
