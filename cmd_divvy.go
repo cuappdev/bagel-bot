@@ -166,9 +166,7 @@ func printDivvied(divvied [][]User, stdout io.Writer) error {
 func addIntroduction(s *Slack, channelId string, userIds []string) (err error) {
 	introductions := [][]string{
 		{
-			"Welcome bagel bot testers. bagel-bot is being rewritten with lots of new features and as AppDev's first voyage into Golang. ",
-			"I would love it if you could help out too. So far, Go has been enjoyable to program in. The core language is small yet expressive. It's super opinionated in a way that most languages aren't, so if you're looking for some experience with it I would love more hands on deck. ",
-			"If you would like to learn more about Go and also improve AppDev's social culture going into a socially-distanced next semester, join the #pod-bagel channel!",
+			"Welcome to your bagel partner for this week! For the first month of chats, you will be randomly paired with people in your subteam :).",
 		},
 	}
 
