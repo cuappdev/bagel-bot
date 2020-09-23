@@ -20,7 +20,7 @@ type SlackError struct {
 }
 
 func (se *SlackError) Error() string {
-	return "slack error: " + se.error.Error()
+	return "slack error: " + se.error.Error() + "\n"
 }
 
 type SlackResponseMetadata struct {
