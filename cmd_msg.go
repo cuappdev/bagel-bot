@@ -16,12 +16,32 @@ type CmdMsg struct {
 }
 
 type CmdMsgSend struct {
-	Text    string `required help:"The text to send"`
+	Text    string `help:"The text to send"`
+	Default string `help:"The default message type to send"`
 	Log     string `help:"The id of the log to send a message to"`
 	Channel string `help:"The id of the slack channel/group to send a message to"`
 }
 
+func resolveDefault(def string) (message string) {
+	switch def{
+	case "reminder":
+		message = "Hello! Just a reminder to find a time to catch up :upside_down_face:. We will be organizing new chats this Sunday, so better find a time asap!"
+	}
+	return message
+}
+
 func (cmd *CmdMsgSend) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error) {
+	var text string
+	if cmd.Text != "" {
+		text = cmd.Text
+	} else {
+		text = resolveDefault(cmd.Default)
+		if text == "" {
+			_, err = io.WriteString(ctx.Stderr, "No text or default message provided\n")
+			return err
+		}
+	}
+
 	if cmd.Log != "" {
 		log, err := BagelLog_Fetch(db, cmd.Log)
 		if err != nil {
@@ -31,19 +51,20 @@ func (cmd *CmdMsgSend) Run(ctx *kong.Context, db *gorm.DB, s *Slack) (err error)
 		var bagels []Bagel
 		db.Model(&log).Association("Bagels").Find(&bagels)
 		for _, bagel := range bagels {
-			conversation := bagel.SlackConversationID
-			if err = s.ChatPostMessage(conversation, cmd.Text, nil); err != nil {
+			if err = s.ChatPostMessage(bagel.SlackConversationID, text, nil); err != nil {
 				_, err = io.WriteString(ctx.Stderr, err.Error())
 				return err
 			}
+			return nil
 		}
 	}
 
 	if cmd.Channel != "" {
-		if err = s.ChatPostMessage(cmd.Channel, cmd.Text, nil); err != nil {
+		if err = s.ChatPostMessage(cmd.Channel, text, nil); err != nil {
 			_, err = io.WriteString(ctx.Stderr, err.Error())
 			return err
 		}
+		return nil
 	}
 
 	return nil
